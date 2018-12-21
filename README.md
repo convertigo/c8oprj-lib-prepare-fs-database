@@ -22,3 +22,5 @@ To import using the Android SDK **2.1.5** :
             return null;
         }
     });
+    
+This library need the jar of [prepare-pre-built-database-1.3.jar](https://github.com/convertigo/prepare-pre-built-database)
