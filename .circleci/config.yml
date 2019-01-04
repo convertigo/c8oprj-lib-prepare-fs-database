@@ -14,8 +14,9 @@ jobs:
         zip -r artifacts/lib_PrepareFSDatabase.car lib_PrepareFSDatabase
     - store_artifacts:
         path: /root/artifacts
+        destination: car
     - persist_to_workspace:
-        root: .
+        root: /root
         paths:
         - artifacts
   release:
@@ -25,7 +26,6 @@ jobs:
     - attach_workspace:
         at: .
     - run: |
-        VERSION="1.3.0"
         ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} artifacts
 workflows:
   version: 2
