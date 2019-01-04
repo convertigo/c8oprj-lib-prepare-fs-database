@@ -6,14 +6,18 @@ jobs:
     steps:
     - checkout
     - run: |
-        ls -lha
-        pwd
+        rm -rf .circleci .git
         wget https://github.com/convertigo/prepare-pre-built-database/releases/download/1.3/prepare-pre-built-database-1.3.jar
-        ls -lha
+        cd ..
+        mv project lib_PrepareFSDatabase 
+        mkdir artifacts
+        zip -r artifacts/lib_PrepareFSDatabase.car lib_PrepareFSDatabase
+    - store_artifacts:
+        path: /root/artifacts
     - persist_to_workspace:
-        root: build
+        root: .
         paths:
-        - libs
+        - artifacts
   release:
     docker:
     - image: cibuilds/github:latest
@@ -21,9 +25,8 @@ jobs:
     - attach_workspace:
         at: .
     - run: |
-        VERSION=$(ls libs/*.jar | sed -n -e "s/.*-\(.*\)\.jar/\1/p")
-        echo "VERSION=$VERSION"
-        ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./libs/
+        VERSION="1.3.0"
+        ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} artifacts
 workflows:
   version: 2
   all:
