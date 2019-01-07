@@ -24,3 +24,14 @@ To import using the Android SDK **2.1.5** :
     });
     
 This library need the jar of [prepare-pre-built-database-1.3.jar](https://github.com/convertigo/prepare-pre-built-database)
+
+# Building a database for a given user
+Since 1.3 this project now supports buillding databases for a given user. To do so call the __PreparePrebuiltDatabase__ sequence with the follwing parameters:
+
+|name | usage | sample
+| --- | ----- | -------
+|database | the name of the database to source data from, must be the name of a fullsync connector | myfullsyncdatabase
+|destination| (optional) the path wher the prebuild database must be build. By default the database will be built in the project's root directory |  |
+|user  | (optional) a user id for wich this database has to be built. The data from the fullsync connector will be flitered for this user according to the groups he belongs to |
+| renew | (optional) if the database has to be built from scratch or just updated with new data | true or false |
+
