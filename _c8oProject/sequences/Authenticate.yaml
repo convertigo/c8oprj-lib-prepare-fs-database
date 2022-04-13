@@ -1,0 +1,62 @@
+accessibility: Hidden
+↓CheckAuthenticate [steps.SimpleStep-1545299790842]: 
+  expression: |
+    'var user = null;
+    var error = null;
+    
+    function checkAuthenticate() {
+    	error = null;
+    	if (token == null || token == "") {
+    	    error = "The \"token\" parameter cannot be null or empty";
+    	    return;
+    	}
+    	
+    	var ts = java.lang.System.clearProperty("convertigo.lib_PrepareFSDatabase." + token);
+    	
+    	if (ts == null || ts == "") {
+    	    error = "Unknow \"token\" parameter";
+    	    return;
+    	} else {
+    		ts *= 1;
+    	}
+    	
+    	token = com.twinsoft.convertigo.engine.util.Crypto2.decodeFromHexString3(token);
+    	var data = JSON.parse(token);
+    	
+    	if (data.ts != ts) {
+    	    error = "Invalid \"token\" parameter";
+    	    return;
+    	}
+    	
+    	var now = new Date().getTime();
+    	if (now > ts || now < (ts - 10000)) {
+    	    error = "Expired \"token\" parameter";
+    	    return;
+    	}
+    	
+    	user = data.user;
+    }
+    
+    checkAuthenticate();'
+↓jIfThenElse [steps.IfThenElseStep-1545300881315]: 
+  condition: error == null && user != null
+  ↓jThen [steps.ThenStep-1545300882484]: 
+    ↓Authenticate [steps.SetAuthenticatedUserStep-1545300891534]: 
+      output: true
+      userid: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: user
+    ↓status [steps.XMLElementStep-1545300889229]: 
+      nodeName: ok
+      nodeText: true
+  ↓jElse [steps.ElseStep-1545300882486]: 
+    ↓error [steps.ElementStep-1545300951149]: 
+      expression: error
+      nodeName: error
+    ↓Log [steps.LogStep-1545300975280]: 
+      expression: error
+      level: ERROR
+↓token [variables.RequestableVariable-1545297875471]: 

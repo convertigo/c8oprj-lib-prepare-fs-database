@@ -1,0 +1,6 @@
+accessibility: Hidden
+↓Remove_authenticated_user [steps.RemoveAuthenticatedUserStep-1547567303091]: 
+↓Remove_session [steps.RemoveSessionStep-1547478325445]: 
+↓Element [steps.XMLElementStep-1547567309706]: 
+  nodeName: logout
+  nodeText: true

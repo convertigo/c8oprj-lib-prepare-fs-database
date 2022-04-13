@@ -1,0 +1,202 @@
+accessibility: Hidden
+responseTimeout: 5000
+↓PreparePrebuiltDatabase [steps.SimpleStep-1495619020825]: 
+  expression: |
+    '/**
+    * Launch the PreparePreBuiltDatabase tool.
+    */
+    var error = null;
+    
+    function buildDatabase() {
+    	// Database
+        context.addTextNodeUnderRoot("database", database);
+        if (database == null || database == "") {
+            error = "The \"database\" parameter cannot be null or empty";
+            return;
+        }
+        
+        // JAR file
+        var jar = new java.io.File(context.getProjectDirectory() + "/prepare-pre-built-database-1.4.jar");
+        context.addTextNodeUnderRoot("jarPath", jar.getAbsolutePath());
+        context.addTextNodeUnderRoot("jarExists", "" + jar.exists());
+        if (!jar.exists()) {
+            error = "The jar \"prepare-pre-built-database.jar\" doesn''t exists in the project, " +
+             "please built it from this java project : https://github.com/convertigo/prepare-pre-built-database";
+            return;
+        }
+        
+        var filename = database;
+        var token = null;
+        if (user != null && user != "") {
+        	filename += "_" + user;
+        	
+        	var ts = new Date().getTime() + 10000;
+        	token = JSON.stringify({
+        		user: user,
+        		ts: ts
+        	});
+        	token = com.twinsoft.convertigo.engine.util.Crypto2.encodeToHexString(token);
+        	java.lang.System.setProperty("convertigo.lib_PrepareFSDatabase." + token, "" + ts);
+        	//context.addTextNodeUnderRoot("token", token);
+        } else {
+        	user = "";
+        }
+        
+        // Server URL
+        var requestUrl = "" + context.httpServletRequest.getRequestURL();
+        context.addTextNodeUnderRoot("requestUrl", requestUrl);
+        
+        if (convertigoUrl == null || convertigoUrl == "") {
+        	convertigoUrl = com.twinsoft.convertigo.engine.EnginePropertiesManager.getProperty(
+        		com.twinsoft.convertigo.engine.EnginePropertiesManager.PropertyName.APPLICATION_SERVER_CONVERTIGO_URL);
+        }
+        convertigoUrl = org.apache.commons.lang3.StringUtils.removeEnd(convertigoUrl, "/");
+        context.addTextNodeUnderRoot("convertigoUrl", convertigoUrl);
+    
+        if (workdir != null && workdir != "") {
+        	workdir = new java.io.File(workdir);
+        } else {
+        	workdir = new java.io.File(context.getProjectDirectory(), "_private");
+        }
+        
+        workdir.mkdirs();
+        context.addTextNodeUnderRoot("workdir", workdir.getAbsolutePath());
+        
+        // Working dir by database
+        var workingDir = new java.io.File(workdir, filename);
+        
+        // Clean working dir
+        renew = (renew == "true");
+       	context.addTextNodeUnderRoot("renew", renew);
+        if (renew) {
+        	org.apache.commons.io.FileUtils.deleteDirectory(workingDir);
+        }
+        var isNew = ! workingDir.exists();
+       	workingDir.mkdirs();
+        
+        // Use custom Java tmp dir for native libraries
+        // Default is /tmp wich prevent multiple instances to run simultaneously
+        var javaTmpDir = ''-Djava.io.tmpdir='' + workingDir.getAbsolutePath();
+        
+        // Temp zip file (avoid deletion on error)
+        var tmpZipFile = new java.io.File(workingDir, database + ".zip");
+        if (tmpZipFile.exists()) {
+        	tmpZipFile.delete();
+        }
+         
+         // Destination ZIP file
+        var zipFile = new java.io.File(context.getProjectDirectory() + "/" + filename + ".zip");
+        var zipFileUrl = convertigoUrl + "/projects/" + context.projectName + "/" + filename + ".zip"
+        destination = destination + "";
+        var mDestination = new RegExp("([^/]+?)/.*\.zip").exec(destination) 
+        if (mDestination) {
+            if (new java.io.File(com.twinsoft.convertigo.engine.Engine.PROJECTS_PATH + "/" + mDestination[1]).exists()) {
+            	zipFile = new java.io.File(com.twinsoft.convertigo.engine.Engine.PROJECTS_PATH + "/" + destination);
+            	zipFileUrl = convertigoUrl + "/projects/" + destination;
+            }
+        }
+        context.addTextNodeUnderRoot("zipPath", zipFile.getAbsolutePath());
+    
+        // Java bin
+        var javaExe = new java.io.File(java.lang.System.getProperty("java.home") + "/bin/java");
+        if (!javaExe.exists()) {
+        	javaExe = new java.io.File(java.lang.System.getProperty("java.home") + "/bin/java.exe");
+        }
+        context.addTextNodeUnderRoot("javaExe", javaExe.getAbsolutePath());
+        
+        var processBuilder = new java.lang.ProcessBuilder();
+        var args = processBuilder.command();
+        args.add("" + javaExe.getAbsolutePath());
+        args.add("" + javaTmpDir);
+        args.add("-jar");
+        args.add("" + jar.getAbsolutePath());
+        if (token != null) {
+        	args.add("-t");
+        	args.add("" + token);
+        }
+        args.add("" + convertigoUrl);
+        args.add("" + database);
+        args.add("" + tmpZipFile.getAbsolutePath());
+        
+        // Start process
+        processBuilder.directory(workingDir).redirectErrorStream(true);
+        
+        log.message("[cmd] " + args);
+        var replicated = execProcess(processBuilder);
+        
+        // Check temp zip file 
+        if (tmpZipFile.exists()) {
+        	org.apache.commons.io.FileUtils.copyFile(tmpZipFile, zipFile);
+    	    context.addTextNodeUnderRoot("DatabaseZipFile", zipFile.getAbsolutePath());
+    	    context.addTextNodeUnderRoot("DatabaseZipFileUrl", zipFileUrl);
+    	    context.addTextNodeUnderRoot("DatabaseZipFileSize", zipFile.length());
+        } else {
+        	error = "New ZIP file not found: " + tmpZipFile.getAbsolutePath();
+        	if (!zipFile.exists()) {
+        		error += "\nOld ZIP file not found either: " + zipFile.getAbsolutePath();
+        	}
+        }
+    }
+    
+    function execProcess(builder) {
+    	var startTime = java.lang.System.currentTimeMillis();
+        var process = builder.start();
+        
+        // Read process output
+        var br = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()));
+        var line;
+        var output = new java.lang.StringBuilder();
+        while ((line = br.readLine()) != null) {
+            log.message("[out] " + line);
+            output.append(line + "\n")
+        }
+       	context.addTextNodeUnderRoot("output", output.toString());
+    
+        // Process status
+        var result = process.waitFor();
+        context.addTextNodeUnderRoot("status", "" + result);
+    
+        var duration = (java.lang.System.currentTimeMillis() - startTime) / 1000;
+        context.addTextNodeUnderRoot("duration", "" + Math.round(duration));
+        if (result != 0) {
+        	error = "Process exited with status " + result;
+        	return;
+        }
+        
+        // Count replicated documents
+        var replicated = 0;
+        try {
+        	replicated = /[\D\d]*Replicated : (\d+) .*/.exec(output.toString())[1];
+        } catch (e) {
+    	}
+        context.addTextNodeUnderRoot("replicated", "" + replicated);
+       	
+       	return replicated;
+    }
+    
+    buildDatabase();'
+↓jIfThenElse [steps.IfThenElseStep-1545304350760]: 
+  condition: error == null
+  ↓jThen [steps.ThenStep-1545304350768]: 
+    ↓status [steps.XMLElementStep-1545304350781]: 
+      nodeName: ok
+      nodeText: true
+  ↓jElse [steps.ElseStep-1545304350788]: 
+    ↓error [steps.ElementStep-1545304350795]: 
+      expression: error
+      nodeName: error
+    ↓Log [steps.LogStep-1545304350801]: 
+      expression: error
+      level: ERROR
+↓database [variables.RequestableVariable-1495619068729]: 
+  comment: The fullsync database name you want to prepare. This has to be the same name of an existing FullSync connector
+↓destination [variables.RequestableVariable-1495632316602]: 
+  comment: (optional) The zip destination, relative to the projects folder. If the path is empty or invalid, the default destination is used.
+↓user [variables.RequestableVariable-1545297938246]: 
+  comment: (optional) The base is prepared for the specified user
+↓renew [variables.RequestableVariable-1545298710172]: 
+  comment: (optional) Start a fresh replication [if true], remove the previous tempory database
+↓workdir [variables.RequestableVariable-1546963190235]: 
+  comment: (optional) Specify the fullpath to the workdir used to replicate data locally before the zip creation. Default is the project "_private" folder
+↓convertigoUrl [variables.RequestableVariable-1587047528648]: 
+  comment: (optional) Specify the Convertigo URL to use to perform the replication. Default is the Convertigo Server application URL

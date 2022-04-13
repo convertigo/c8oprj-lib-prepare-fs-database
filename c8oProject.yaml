@@ -1,0 +1,13 @@
+↑convertigo: 7.9.0.m006
+↓lib_PrepareFSDatabase [core.Project]: 
+  comment: |
+    This library will help by preparing an offline FullSync database to be downloaded or installed within an Mobile Application.
+    
+    This is usefull for preparing large offline databases that will be downloaded once and then synced for updates.
+  contextTimeout: 5000
+  corsOrigin: '*'
+  version: 1.4.0
+  ↓void [connectors.SqlConnector]: 🗏 connectors/void.yaml
+  ↓Authenticate [sequences.GenericSequence]: 🗏 sequences/Authenticate.yaml
+  ↓Logout [sequences.GenericSequence]: 🗏 sequences/Logout.yaml
+  ↓PreparePrebuiltDatabase [sequences.GenericSequence]: 🗏 sequences/PreparePrebuiltDatabase.yaml
