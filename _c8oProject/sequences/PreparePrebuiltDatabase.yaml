@@ -16,7 +16,7 @@ responseTimeout: 5000
         }
         
         // JAR file
-        var jar = new java.io.File(context.getProjectDirectory() + "/prepare-pre-built-database-1.4.jar");
+        var jar = new java.io.File(context.getProjectDirectory() + "/prepare-pre-built-database-1.5.jar");
         context.addTextNodeUnderRoot("jarPath", jar.getAbsolutePath());
         context.addTextNodeUnderRoot("jarExists", "" + jar.exists());
         if (!jar.exists()) {
@@ -114,6 +114,10 @@ responseTimeout: 5000
         	args.add("-t");
         	args.add("" + token);
         }
+        if (socketTimeout != null && socketTimeout != "") {
+        	args.add("-st");
+        	args.add("" + socketTimeout);
+        }
         args.add("" + convertigoUrl);
         args.add("" + database);
         args.add("" + tmpZipFile.getAbsolutePath());
@@ -126,6 +130,9 @@ responseTimeout: 5000
         
         // Check temp zip file 
         if (tmpZipFile.exists()) {
+    		if (overrideZip == "true") {
+        		org.apache.commons.io.FileUtils.deleteQuietly(zipFile);
+    		}
         	org.apache.commons.io.FileUtils.copyFile(tmpZipFile, zipFile);
     	    context.addTextNodeUnderRoot("DatabaseZipFile", zipFile.getAbsolutePath());
     	    context.addTextNodeUnderRoot("DatabaseZipFileUrl", zipFileUrl);
@@ -189,14 +196,18 @@ responseTimeout: 5000
       expression: error
       level: ERROR
 ↓database [variables.RequestableVariable-1495619068729]: 
-  comment: The fullsync database name you want to prepare. This has to be the same name of an existing FullSync connector
+  comment: The fullsync database name you want to prepare. This has to be the same name of an existing FullSync connector.
 ↓destination [variables.RequestableVariable-1495632316602]: 
   comment: (optional) The zip destination, relative to the projects folder. If the path is empty or invalid, the default destination is used.
 ↓user [variables.RequestableVariable-1545297938246]: 
-  comment: (optional) The base is prepared for the specified user
+  comment: (optional) A user id for which this database has to be built. The data from the fullsync connector will be filtered for this user according to the groups he belongs to.
 ↓renew [variables.RequestableVariable-1545298710172]: 
-  comment: (optional) Start a fresh replication [if true], remove the previous tempory database
+  comment: (optional) Start a fresh replication [if true], remove the previous temporary database.
 ↓workdir [variables.RequestableVariable-1546963190235]: 
-  comment: (optional) Specify the fullpath to the workdir used to replicate data locally before the zip creation. Default is the project "_private" folder
+  comment: (optional) Specify the fullpath to the workdir used to replicate data locally before the zip creation. Default is the project "_private" folder.
 ↓convertigoUrl [variables.RequestableVariable-1587047528648]: 
-  comment: (optional) Specify the Convertigo URL to use to perform the replication. Default is the Convertigo Server application URL
+  comment: (optional) Specify the Convertigo URL to use to perform the replication. Default is the Convertigo Server application URL.
+↓socketTimeout [variables.RequestableVariable-1714396706344]: 
+  comment: (optional) Specify the replication socket timeout in second. Default is 300 sec (5 min).
+↓overrideZip [variables.RequestableVariable-1714397470393]: 
+  comment: (optional) Specify if the destination zip should be replaced if exist. Default is false.

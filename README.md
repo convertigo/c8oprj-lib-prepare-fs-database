@@ -23,15 +23,19 @@ To import using the Android SDK **2.1.5** :
         }
     });
     
-This library need the jar of [prepare-pre-built-database-1.3.jar](https://github.com/convertigo/prepare-pre-built-database)
+This library need the jar of [prepare-pre-built-database-1.5.jar](https://github.com/convertigo/prepare-pre-built-database). The jar should be copied at the project root folder.
 
 # Building a database for a given user
 Since 1.3 this project now supports buillding databases for a given user. To do so call the __PreparePrebuiltDatabase__ sequence with the follwing parameters:
 
 |name | usage | sample
 | --- | ----- | -------
-|database | the name of the database to source data from, must be the name of a fullsync connector | myfullsyncdatabase
-|destination| (optional) the path where the prebuild database must be build. By default the database will be built in the project's root directory |  |
-|user  | (optional) a user id for which this database has to be built. The data from the fullsync connector will be flitered for this user according to the groups he belongs to |
-| renew | (optional) if the database has to be built from scratch or just updated with new data | true or false |
+|database | The fullsync database name you want to prepare. This has to be the same name of an existing FullSync connector. | myfullsyncdatabase
+|destination| (optional) The zip destination, relative to the projects folder. If the path is empty or invalid, the default destination is used. |  |
+|user  | (optional) A user id for which this database has to be built. The data from the fullsync connector will be filtered for this user according to the groups he belongs to. |  |
+|renew | (optional) Start a fresh replication [if true], remove the previous temporary database. | true or false |
+|workdir | (optional) Specify the fullpath to the workdir used to replicate data locally before the zip creation. Default is the project "_private" folder. |  |
+|convertigoUrl | (optional) Specify the Convertigo URL to use to perform the replication. Default is the Convertigo Server application URL. |  |
+|socketTimeout | (optional) Specify the replication socket timeout in second. Default is 300 sec (5 min). | number |
+|overrideZip | (optional) Specify if the destination zip should be replaced if exist. Default is false. | true or false |
 
