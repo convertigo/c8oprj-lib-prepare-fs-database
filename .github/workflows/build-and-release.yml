@@ -10,14 +10,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: cibuilds/github:latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.SSH_KEY }}
 
       - name: Prepare Project for Deployment
         run: |
           rm -rf .github .git
-          wget https://github.com/convertigo/prepare-pre-built-database/releases/download/1.5/prepare-pre-built-database-1.5.jar
+          wget https://github.com/convertigo/prepare-pre-built-database/releases/download/1.6/prepare-pre-built-database-1.6.jar
           cd ..
           mv c8oprj-lib-prepare-fs-database lib_PrepareFSDatabase 
           mkdir c8oprj-lib-prepare-fs-database
@@ -30,10 +32,9 @@ jobs:
           path: .
 
   release:
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.ref_type == 'tag'
     needs: build
     runs-on: ubuntu-latest
-    container: cibuilds/github:latest
     steps:
       - name: Download CAR File
         uses: actions/download-artifact@v4
